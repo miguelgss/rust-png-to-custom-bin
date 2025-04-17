@@ -5,7 +5,6 @@ use std::io::{BufWriter, Write};
 use std::path::Path;
 
 const LIMIT_COLORS: u8 = 4;
-// Convert PNGs to our custom format with just 2 bits per pixel (4 colors + transparency)
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     
@@ -24,11 +23,9 @@ fn main() {
 }
 
 fn convert_png_to_custom(input_path: &str, output_path: &str) -> Result<usize, Box<dyn std::error::Error>> {
-    // Load the PNG image
     let img = image::open(&Path::new(input_path))?;
     let (width, height) = img.dimensions();
     
-    // Create palette mapping - we'll only use the first 4 colors encountered
     let mut palette = HashMap::new();
     palette.insert(Rgba([0, 0, 0, 0]), 0u8); // Transparent is always 0
     let mut next_color_id = 1;
@@ -38,17 +35,14 @@ fn convert_png_to_custom(input_path: &str, output_path: &str) -> Result<usize, B
         for x in 0..width {
             let pixel = img.get_pixel(x, y);
             
-            // Skip if already in palette
             if palette.contains_key(&pixel) {
                 continue;
             }
             
-            // Add to palette if we have space
             if next_color_id < LIMIT_COLORS {
                 palette.insert(pixel, next_color_id);
                 next_color_id += 1;
             } else {
-                // More than 4 colors found! Return error or quantize
                 return Err(format!("Image has more than 4 colors at position ({}, {})", x, y).into());
             }
         }
@@ -84,7 +78,6 @@ fn convert_png_to_custom(input_path: &str, output_path: &str) -> Result<usize, B
             current_byte |= (color_id & 0b11) << bit_position;
             bit_position += 2;
             
-            // When we've packed 4 pixels (8 bits), write the byte
             if bit_position == 8 {
                 writer.write_all(&[current_byte])?;
                 current_byte = 0;
