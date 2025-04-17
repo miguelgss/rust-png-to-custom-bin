@@ -1,0 +1,14 @@
+[package]
+name = "sprite-converter"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+image = "0.25.6"
+
+[profile.release]
+opt-level = "z"     # Optimize for size
+lto = true          # Enable Link Time Optimization
+codegen-units = 1   # Smaller code size
+panic = "abort"     # Removes panic unwinding code
+strip = true        # Strip symbols from binary
